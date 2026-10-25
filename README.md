@@ -1,2 +1,71 @@
-# Sonora_Audio_Studio
-Sonora Audio Studio 支持 WAV、FLAC、MP3、APE 音频处理。导入音频后，通过左侧菜单选择裁剪、合并、专辑分轨或格式转换。输入时间点或导入 CUE，预览分段，设置输出格式，最后导出文件。 Sonora Audio Studio supports WAV, FLAC, MP3, and APE. Import audio, select Trim, Merge, Track Split, or Convert from the sidebar. Enter timestamps or import a CUE file, preview segments, choose the output format, and export.
+# Sonora Audio Studio 1.5 · 独立功能页面版
+
+基于 HTML / CSS / JavaScript / Vite / FFmpeg WebAssembly 的本地音频工作台。蓝白风格，左侧菜单切换不同工作页面，各页面共享本次导入的音频素材、当前所选文件与导出设置。
+
+## 新版功能布局
+
+| 左侧菜单 | 功能说明 |
+| --- | --- |
+| 工作概览 | 统计素材数、时长、输出格式、当前会话任务数；快速进入其他工具 |
+| 素材管理 | 批量导入 WAV、FLAC、MP3、APE，选择、删除、排序素材 |
+| 精确裁剪 | 独立的波形/试听/起止秒数编辑，可单独导出 |
+| 多段合并 | 独立合并队列，支持在该页调整文件顺序，使用各素材已设定的保留区间 |
+| 专辑分轨 | CUE（单整轨）、曲目清单、固定时长、自定义秒数断点，预览后 ZIP 导出 |
+| 格式转换 | **新增**批量转 WAV、FLAC、MP3，ZIP 下载；可选择是否应用每个素材的裁剪区间 |
+| 任务中心 | **新增**当前页面会话内的任务进度、成功/失败记录，复制 FFmpeg 日志 |
+| 导出设置 | 输出格式、采样率、MP3 比特率、响度标准化；**新增**浏览器本地记住这些设置 |
+
+### 曲目清单示例（可直接粘贴）
+
+```
+00:00:45 我爱你
+00:07:22 欧拉拉呼呼
+00:10:57 就像白痴一样
+01:00:30 rock’n roll的style
+02:59:12 nice to meet you
+```
+
+同时兼容歌曲名称在前的写法，例如 `水乡03:47`、`一程山路 08:29`、带编号与空格/横线/竖线的形式。上一首的结束时间由下一首开始时间确定；最后一首到音频结束。首曲从非零秒开始时，支持单独保留片头。
+
+## Windows 运行
+
+1. 安装 Node.js LTS：https://nodejs.org/
+2. 解压 ZIP 后进入 `sonora-audio-studio` 文件夹，双击 `启动软件.bat`。
+3. 首次安装依赖需要网络。按终端显示的地址打开，默认是 http://127.0.0.1:5173/ 。
+4. 如通过命令行启动，请使用 `npm install`，再运行 `npm run dev`，**不要使用 `node start`**。
+5. 替换旧版时先在旧终端按 `Ctrl+C` 停止 Vite 服务，再使用新版文件覆盖。若浏览器显示旧页面，按 `Ctrl+F5` 强制刷新。
+
+## 格式与运行说明
+
+- 输入：WAV、FLAC、MP3、APE。APE 的实际解码取决于 FFmpeg WebAssembly 构建支持的编码。
+- 输出：WAV、FLAC、MP3；不支持编码输出 APE。
+- 第一次真正开始音频处理时需要联网获取 FFmpeg Core ESM 文件（默认通过 jsDelivr，备用 unpkg）。如核心 CDN 被阻断或浏览器禁止 Worker，音频导出仍可能无法使用；界面导航、文件列表及曲目文本解析不等于 FFmpeg 编解码已经成功。
+- 原始音频保持不变，音频数据不上传到本项目的服务器。页面刷新/关闭后，**出于浏览器权限限制，素材列表、裁剪状态和任务记录不会自动恢复**；仅统一输出设置持久化在浏览器本地。
+- 长达数小时或体积很大的无损整轨音频，在单标签页中导出几十首曲目可能遇到浏览器内存不足；目前未实现磁盘流式处理、任务中断续算或多文件 CUE。
+- 部分编码的导出精度和首尾帧由音频编解码器决定，尤其 MP3 不保证无损或完全无缝拼接。
+
+## 开发与检查
+
+```bash
+npm install
+npm run test:parser
+npm run dev
+npm run build
+```
+
+目录结构：
+
+```
+sonora-audio-studio/
+  index.html                # 8 个独立工作页面及左侧菜单
+  src/main.js               # 页面路由、音频处理、批量转换、任务记录
+  src/style.css             # 蓝白响应式布局与模块样式
+  src/tracklist-parser.js   # 兼容多种文本时间格式
+  tests/                    # 曲目清单解析测试
+  examples/                 # 曲目清单示例
+  启动软件.bat               # Windows 一键启动
+```
+
+### 版本 1.5 的测试范围
+
+本次已通过：JavaScript 源码语法检查、7 个曲目解析器测试、8 个页面导航的浏览器模拟交互测试、2 个测试文件的导入/排序/跨页面共享测试以及移动端页面横向溢出检查。浏览器交互测试使用了**模拟的音频元数据**，不代表 FFmpeg 导出实测通过。本容器未能完成包含 Vite/Rollup 的实际产物构建及真实音频端到端编解码验证。
